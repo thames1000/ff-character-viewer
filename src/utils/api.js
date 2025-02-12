@@ -29,7 +29,7 @@ async function fetchWithFallback(url) {
     throw new Error(`Failed to fetch valid content. Last error: ${lastError?.message}`);
 }
 
-async function searchCharacters(name, world = '', datacenter = '') {
+export async function searchCharacters(name, world = '', datacenter = '') {
     const params = new URLSearchParams({
         q: name.trim(),
         worldname: world || '',
@@ -91,7 +91,7 @@ async function searchCharacters(name, world = '', datacenter = '') {
     }
 }
 
-async function getCharacterDetails(characterId) {
+export async function getCharacterDetails(characterId) {
     try {
         const [profile, jobs] = await Promise.all([
             getProfile(characterId),
@@ -225,7 +225,4 @@ function getJobAbbr(jobName) {
     return jobMap[jobName] || null;
 }
 
-module.exports = {
-    searchCharacters,
-    getCharacterDetails
-};
+export { getProfile, getJobs, categorizeJob, getJobAbbr };

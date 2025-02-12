@@ -1,4 +1,4 @@
-const api = require('./utils/api.js');
+import { searchCharacters, getCharacterDetails } from './utils/api.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const searchForm = document.getElementById('searchForm');
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         detailsEl.innerHTML = '';
 
         try {
-            const { characters } = await api.searchCharacters(name, world, datacenter);
+            const { characters } = await searchCharacters(name, world, datacenter);
             displaySearchResults(characters);
         } catch (error) {
             errorEl.textContent = error.message || 'Failed to search characters. Please try again.';
@@ -80,7 +80,7 @@ window.showCharacterDetails = async function(characterId) {
     detailsEl.innerHTML = '';
 
     try {
-        const character = await api.getCharacterDetails(characterId);
+        const character = await getCharacterDetails(characterId);
         displayCharacterDetails(character);
     } catch (error) {
         errorEl.textContent = error.message || 'Failed to load character details. Please try again.';

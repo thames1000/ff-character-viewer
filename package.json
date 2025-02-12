@@ -1,13 +1,13 @@
 {
-    "name": "ffxiv-character-viewer",
+    "name": "ffxiv-character-search",
     "version": "1.0.0",
     "description": "FFXIV Character Search using Lodestone",
     "main": "src/server.js",
     "scripts": {
-        "start": "webpack serve",
-        "build": "NODE_ENV=production webpack",
-        "predeploy": "npm run build",
-        "deploy": "gh-pages -d dist"
+        "start": "node src/server.js",
+        "dev": "nodemon src/server.js",
+        "build": "webpack --mode production",
+        "watch": "webpack --watch --mode development"
     },
     "dependencies": {
         "cheerio": "^1.0.0-rc.12",
@@ -16,17 +16,10 @@
         "node-fetch": "^2.6.9"
     },
     "devDependencies": {
-        "@babel/core": "^7.22.5",
-        "@babel/preset-env": "^7.22.5",
-        "babel-loader": "^9.1.2",
-        "copy-webpack-plugin": "^11.0.0",
         "css-loader": "^6.8.1",
-        "gh-pages": "^5.0.0",
-        "html-webpack-plugin": "^5.5.3",
         "style-loader": "^3.3.3",
         "webpack": "^5.88.0",
         "webpack-cli": "^5.1.4",
-        "webpack-dev-server": "^4.15.2"
-    },
-    "homepage": "https://thames1000.github.io/ff-character-viewer/"
+        "nodemon": "^3.0.1"
+    }
 }

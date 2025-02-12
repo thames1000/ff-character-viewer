@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+<<<<<<< Updated upstream
     <title>Redirecting...</title>
     <script>
         // Get the repository name from the URL
@@ -17,6 +18,38 @@
         <meta http-equiv="refresh" content="0;url=public/index.html">
     </noscript>
     <p>Redirecting to <a href="public/index.html">FFXIV Character Search</a>...</p>
+=======
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FFXIV Character Search</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <div id="app">
+        <header>
+            <h1>FFXIV Character Search</h1>
+        </header>
+
+        <main>
+            <form id="search-form">
+                <div class="search-group">
+                    <input type="text" id="character-name" placeholder="Character Name" required>
+                    <input type="text" id="world" placeholder="World (optional)">
+                    <input type="text" id="datacenter" placeholder="Data Center (optional)">
+                    <button type="submit">Search</button>
+                </div>
+            </form>
+
+            <div id="results"></div>
+            <div id="character-details"></div>
+        </main>
+
+        <footer>
+            <p>Data from FFXIV Lodestone</p>
+        </footer>
+    </div>
+    <script src="bundle.js"></script>
+>>>>>>> Stashed changes
 </body>
 
 </html>

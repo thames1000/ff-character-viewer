@@ -1,12 +1,14 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-    entry: './src/index.js',
+    mode: 'development',
+    entry: './src/app.js',
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'bundle.js',
-        publicPath: './'
+        publicPath: ''
     },
     module: {
         rules: [
@@ -15,12 +17,12 @@ module.exports = {
                 use: ['style-loader', 'css-loader'],
             },
             {
-                test: /\.(js|jsx)$/,
+                test: /\.js$/,
                 exclude: /node_modules/,
                 use: {
                     loader: 'babel-loader',
                     options: {
-                        presets: ['@babel/preset-react', '@babel/preset-env']
+                        presets: ['@babel/preset-env']
                     }
                 }
             }
@@ -30,20 +32,22 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: './index.html',
             filename: 'index.html'
-        })
+        }),
+        new CopyPlugin({
+            patterns: [
+                { from: "styles.css", to: "styles.css" }
+            ],
+        }),
     ],
     resolve: {
-        extensions: ['.js', '.jsx']
+        extensions: ['.js']
     },
     devServer: {
-        historyApiFallback: true,
         static: {
             directory: path.join(__dirname, 'dist'),
         },
         compress: true,
         port: 3000,
-        devMiddleware: {
-            publicPath: '/'
-        }
+        open: true
     }
 };

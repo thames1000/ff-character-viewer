@@ -1,0 +1,142 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codegreen},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+\title{FFXIV Character Search - User Guide}
+\author{Development Team}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+FFXIV Character Search is a web application that allows users to search for and view character information from Final Fantasy XIV using the Lodestone database.
+
+\section{Prerequisites}
+Before running the application, ensure you have the following installed:
+\begin{itemize}
+    \item Node.js (version 14 or higher)
+    \item npm (usually comes with Node.js)
+    \item Git (for version control)
+\end{itemize}
+
+\section{Installation}
+\subsection{Clone the Repository}
+First, clone the repository using git:
+
+\begin{lstlisting}[language=bash]
+git clone <repository-url>
+cd ffxiv-character-search
+\end{lstlisting}
+
+\subsection{Install Dependencies}
+Install all required dependencies using npm:
+
+\begin{lstlisting}[language=bash]
+npm install
+\end{lstlisting}
+
+\section{Building the Application}
+To build the application, run:
+
+\begin{lstlisting}[language=bash]
+npm run build
+\end{lstlisting}
+
+This command will:
+\begin{itemize}
+    \item Bundle all JavaScript files using webpack
+    \item Create the production-ready bundle in public/dist/
+\end{itemize}
+
+\section{Running the Application}
+\subsection{Development Mode}
+To run the application in development mode with auto-reload:
+
+\begin{lstlisting}[language=bash]
+npm run dev
+\end{lstlisting}
+
+The application will be available at \url{http://localhost:3000}
+
+\subsection{Production Mode}
+To run the application in production mode:
+
+\begin{lstlisting}[language=bash]
+npm start
+\end{lstlisting}
+
+\section{Using the Application}
+\subsection{Searching for Characters}
+\begin{enumerate}
+    \item Enter a character name in the search field
+    \item Optionally, enter a World and/or Data Center
+    \item Click the "Search" button
+    \item Results will appear below the search form
+\end{enumerate}
+
+\subsection{Viewing Character Details}
+\begin{enumerate}
+    \item From the search results, click "Select Character" on any character card
+    \item The character's detailed information will be displayed, including:
+    \begin{itemize}
+        \item Character portrait and basic information
+        \item Combat jobs (Tanks, Healers, DPS)
+        \item Crafting and Gathering jobs
+    \end{itemize}
+\end{enumerate}
+
+\section{Troubleshooting}
+\subsection{Common Issues}
+\begin{itemize}
+    \item If the application fails to start, ensure all dependencies are installed
+    \item If searches fail, check your internet connection
+    \item If character details don't load, the Lodestone might be undergoing maintenance
+\end{itemize}
+
+\section{Development}
+\subsection{Project Structure}
+\begin{lstlisting}
+ffxiv-character-search/
+├── public/
+│   ├── css/
+│   ├── dist/
+│   └── index.html
+├── src/
+│   ├── components/
+│   ├── utils/
+│   ├── index.js
+│   └── server.js
+├── package.json
+└── webpack.config.js
+\end{lstlisting}
+
+\end{document} 

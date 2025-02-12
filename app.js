@@ -1,3 +1,5 @@
+import { searchCharacters, getCharacterDetails } from './src/utils/api.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     const searchForm = document.getElementById('searchForm');
     const loadingEl = document.getElementById('loading');
@@ -18,10 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
         detailsEl.innerHTML = '';
 
         try {
-            const characters = await LodestoneAPI.searchCharacters(name, world, datacenter);
+            const { characters } = await searchCharacters(name, world, datacenter);
             displaySearchResults(characters);
         } catch (error) {
-            errorEl.textContent = 'Failed to search characters. Please try again.';
+            errorEl.textContent = error.message || 'Failed to search characters. Please try again.';
             errorEl.style.display = 'block';
         } finally {
             loadingEl.style.display = 'none';
@@ -50,15 +52,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = document.createElement('div');
         card.className = 'character-card';
         card.innerHTML = `
-            <div class="character-header">
-                <img src="${char.avatar}" alt="${char.name}" class="character-avatar">
-                <div class="character-info">
-                    <h3>${char.name}</h3>
-                    <p>${char.world} [${char.datacenter}]</p>
-                    <p>${char.rank}</p>
-                </div>
+            <img src="${char.avatar}" alt="${char.name}" class="character-avatar">
+            <div class="character-info">
+                <h4>${char.name}</h4>
+                <p>${char.world} [${char.datacenter}]</p>
+                <p>${char.rank} (${char.level})</p>
+                <button onclick="showCharacterDetails('${char.id}')">View Details</button>
             </div>
-            <button onclick="showCharacterDetails('${char.id}')">View Details</button>
         `;
         return card;
     }
@@ -74,10 +74,10 @@ async function showCharacterDetails(characterId) {
     detailsEl.innerHTML = '';
 
     try {
-        const character = await LodestoneAPI.getCharacterDetails(characterId);
+        const character = await getCharacterDetails(characterId);
         displayCharacterDetails(character);
     } catch (error) {
-        errorEl.textContent = 'Failed to load character details. Please try again.';
+        errorEl.textContent = error.message || 'Failed to load character details. Please try again.';
         errorEl.style.display = 'block';
     } finally {
         loadingEl.style.display = 'none';
@@ -86,50 +86,58 @@ async function showCharacterDetails(characterId) {
 
 function displayCharacterDetails(character) {
     const detailsEl = document.getElementById('characterDetails');
-
-    detailsEl.innerHTML = `
+    
+    const details = document.createElement('div');
+    details.className = 'character-details';
+    details.innerHTML = `
         <div class="character-header">
             <img src="${character.portrait}" alt="${character.name}" class="character-portrait">
-            <div class="character-info">
+            <div class="character-header-info">
                 <h2>${character.name}</h2>
-                ${character.title ? `<p class="character-title">${character.title}</p>` : ''}
-                <p class="character-server">${character.server}</p>
+                ${character.title ? `<h3>"${character.title}"</h3>` : ''}
+                <p>${character.server}</p>
+                ${character.bio ? `<p class="character-bio">${character.bio}</p>` : ''}
             </div>
         </div>
-        ${character.bio ? `<div class="character-bio">${character.bio}</div>` : ''}
-        <div class="jobs-section">
-            <div class="combat-jobs">
+        <div class="character-jobs">
+            <div class="job-category">
                 <h3>Combat Jobs</h3>
-                ${displayJobCategory('Tanks', character.jobs.tank)}
-                ${displayJobCategory('Healers', character.jobs.healer)}
-                ${displayJobCategory('DPS', character.jobs.dps)}
+                <div class="job-grid">
+                    ${displayJobCategory('Tanks', character.jobs.tank)}
+                    ${displayJobCategory('Healers', character.jobs.healer)}
+                    ${displayJobCategory('DPS', character.jobs.dps)}
+                </div>
             </div>
-            <div class="crafting-jobs">
-                <h3>Crafters & Gatherers</h3>
-                ${displayJobCategory('Crafters', character.jobs.crafting)}
-                ${displayJobCategory('Gatherers', character.jobs.gathering)}
+            <div class="job-category">
+                <h3>Other Jobs</h3>
+                <div class="job-grid">
+                    ${displayJobCategory('Crafting', character.jobs.crafting)}
+                    ${displayJobCategory('Gathering', character.jobs.gathering)}
+                </div>
             </div>
         </div>
     `;
+
+    detailsEl.innerHTML = '';
+    detailsEl.appendChild(details);
 }
 
 function displayJobCategory(title, jobs) {
-    if (!Object.keys(jobs).length) return '';
+    if (!jobs || Object.keys(jobs).length === 0) return '';
 
-    const jobItems = Object.entries(jobs).map(([abbr, job]) => `
-        <div class="job-item ${job.level === 90 ? 'max-level' : ''}">
-            <img src="${job.icon}" alt="${abbr}" class="job-icon">
-            <div class="job-name">${abbr}</div>
-            <div class="job-level">${job.level}</div>
+    const jobElements = Object.entries(jobs).map(([job, data]) => `
+        <div class="job-item">
+            <img src="${data.icon}" alt="${job}" class="job-icon">
+            <span class="job-level">${data.level}</span>
         </div>
     `).join('');
 
     return `
-        <div class="job-category">
+        <div class="job-section">
             <h4>${title}</h4>
-            <div class="jobs-grid">
-                ${jobItems}
+            <div class="job-items">
+                ${jobElements}
             </div>
         </div>
     `;
-} 
+}

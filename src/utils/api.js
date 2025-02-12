@@ -1,4 +1,5 @@
 const LODESTONE_URL = 'https://na.finalfantasyxiv.com/lodestone';
+const CORS_PROXY = 'https://corsproxy.io/?';
 
 export async function searchCharacters(name, world = '', datacenter = '') {
     try {
@@ -11,7 +12,7 @@ export async function searchCharacters(name, world = '', datacenter = '') {
             page: '1'
         }).toString();
 
-        const response = await fetch(`${LODESTONE_URL}/character/?${params}`);
+        const response = await fetch(`${CORS_PROXY}${LODESTONE_URL}/character/?${params}`);
         const text = await response.text();
         const parser = new DOMParser();
         const doc = parser.parseFromString(text, 'text/html');
@@ -45,12 +46,12 @@ export async function searchCharacters(name, world = '', datacenter = '') {
 export async function getCharacterDetails(characterId) {
     try {
         // Get profile
-        const profileResponse = await fetch(`/lodestone/character/${characterId}/`);
+        const profileResponse = await fetch(`${CORS_PROXY}${LODESTONE_URL}/character/${characterId}/`);
         const profileText = await profileResponse.text();
         const profileDoc = new DOMParser().parseFromString(profileText, 'text/html');
 
         // Get jobs
-        const jobsResponse = await fetch(`/lodestone/character/${characterId}/class_job`);
+        const jobsResponse = await fetch(`${CORS_PROXY}${LODESTONE_URL}/character/${characterId}/class_job`);
         const jobsText = await jobsResponse.text();
         const jobsDoc = new DOMParser().parseFromString(jobsText, 'text/html');
 

@@ -25,10 +25,12 @@ export function renderSearchResults(characters, container, onCharacterClick) {
         </div>
     `;
 
+    // Add click handlers for the select buttons
     container.querySelectorAll('.character-card').forEach(card => {
         const selectBtn = card.querySelector('.select-character');
         selectBtn.addEventListener('click', () => {
             onCharacterClick(card.dataset.id);
+            // Highlight selected card
             container.querySelectorAll('.character-card').forEach(c =>
                 c.classList.remove('selected'));
             card.classList.add('selected');
@@ -109,6 +111,7 @@ function renderJobCategory(jobs) {
     return Object.entries(jobs)
         .map(([abbr, jobInfo]) => {
             console.log('Rendering job:', { abbr, jobInfo });
+
             return `
                 <div class="job-item ${jobInfo.level === 100 ? 'max-level' : ''}">
                     <div class="job-name">${abbr}</div>
@@ -117,4 +120,29 @@ function renderJobCategory(jobs) {
                 </div>
             `;
         }).join('');
+}
+
+function renderSearchForm(container) {
+    container.innerHTML = `
+        <div class="search-group">
+            <div class="search-field">
+                <label for="character-name">Character Name</label>
+                <input type="text" id="character-name" placeholder="Character Name" required>
+            </div>
+            
+            <div class="search-field">
+                <label for="world">World</label>
+                <input type="text" id="world" placeholder="World (optional)">
+            </div>
+            
+            <div class="search-field">
+                <label for="datacenter">Data Center</label>
+                <input type="text" id="datacenter" placeholder="Data Center (optional)">
+            </div>
+            
+            <div class="search-field">
+                <button type="button" class="search-button">Search</button>
+            </div>
+        </div>
+    `;
 } 

@@ -69,8 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Make showCharacterDetails available globally
-window.showCharacterDetails = async function(characterId) {
+async function showCharacterDetails(characterId) {
     const detailsEl = document.getElementById('characterDetails');
     const loadingEl = document.getElementById('loading');
     const errorEl = document.getElementById('error');
@@ -88,7 +87,7 @@ window.showCharacterDetails = async function(characterId) {
     } finally {
         loadingEl.style.display = 'none';
     }
-};
+}
 
 function displayCharacterDetails(character) {
     const detailsEl = document.getElementById('characterDetails');

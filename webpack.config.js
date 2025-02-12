@@ -3,12 +3,12 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-    mode: 'development',
+    mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
     entry: './src/app.js',
     output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: 'bundle.js',
-        publicPath: ''
+        filename: '[name].[contenthash].js',
+        clean: true
     },
     module: {
         rules: [
@@ -30,8 +30,7 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            template: './index.html',
-            filename: 'index.html'
+            template: './index.html'
         }),
         new CopyPlugin({
             patterns: [

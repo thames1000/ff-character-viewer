@@ -1,0 +1,178 @@
+\documentclass[12pt]{article}
+
+% UTF-8 support
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+% Other packages
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{enumitem}
+
+% Configure listings for UTF-8
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    inputencoding=utf8,
+    extendedchars=true
+}
+
+\title{FFXIV Character Search\\User Guide}
+\author{Development Team}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Overview}
+FFXIV Character Search is a web application that allows users to search for Final Fantasy XIV characters using the Lodestone website. The application provides:
+
+\begin{itemize}
+    \item Character search by name, world, and data center
+    \item Detailed character information display
+    \item Combat job levels
+    \item Current gear and item levels
+\end{itemize}
+
+\section{Installation}
+
+\subsection{Prerequisites}
+Before installing the application, ensure you have:
+\begin{itemize}
+    \item Node.js (version 14 or higher)
+    \item npm (comes with Node.js)
+    \item A modern web browser
+\end{itemize}
+
+\subsection{Installation Steps}
+\begin{enumerate}
+    \item Clone or download the project files
+    \item Open a terminal in the project directory
+    \item Install dependencies:
+    \begin{lstlisting}[language=bash]
+    npm install
+    \end{lstlisting}
+    \item Build the frontend:
+    \begin{lstlisting}[language=bash]
+    npm run build
+    \end{lstlisting}
+    \item Start the server:
+    \begin{lstlisting}[language=bash]
+    npm start
+    \end{lstlisting}
+\end{enumerate}
+
+\section{Using the Application}
+
+\subsection{Searching for Characters}
+\begin{enumerate}
+    \item Enter a character name (required)
+    \item Optionally enter:
+    \begin{itemize}
+        \item World name (e.g., Gilgamesh)
+        \item Data Center name (e.g., Aether)
+    \end{itemize}
+    \item Click the "Search" button
+\end{enumerate}
+
+\subsection{Search Results}
+The search results will display:
+\begin{itemize}
+    \item Character avatar
+    \item Character name
+    \item World and Data Center
+    \item Current job and level
+\end{itemize}
+
+\subsection{Viewing Character Details}
+\begin{enumerate}
+    \item Click on a character card in the search results
+    \item View detailed information:
+    \begin{itemize}
+        \item Character portrait
+        \item Title
+        \item Server information
+        \item Combat job levels
+        \item Current gear with item levels
+    \end{itemize}
+\end{enumerate}
+
+\section{Development}
+
+\subsection{Project Structure}
+\begin{lstlisting}
+ffxiv-character-search/
+├── src/
+│   ├── components/    # UI components
+│   ├── utils/        # Utility functions
+│   ├── index.js      # Frontend entry
+│   └── server.js     # Backend server
+├── public/
+│   ├── dist/         # Compiled JavaScript
+│   ├── css/          # Stylesheets
+│   └── index.html    # Main HTML file
+└── package.json      # Project config
+\end{lstlisting}
+
+\subsection{Available Scripts}
+\begin{itemize}
+    \item \texttt{npm start} - Run production server
+    \item \texttt{npm run dev} - Run development server
+    \item \texttt{npm run build} - Build frontend
+    \item \texttt{npm run watch} - Watch frontend changes
+\end{itemize}
+
+\section{Troubleshooting}
+
+\subsection{Common Issues}
+
+\subsubsection{No Search Results}
+If no characters are found:
+\begin{itemize}
+    \item Verify the character name spelling
+    \item Check if the world name is correct
+    \item Ensure the data center name is correct
+\end{itemize}
+
+\subsubsection{Loading Errors}
+If you encounter loading errors:
+\begin{itemize}
+    \item Check your internet connection
+    \item Verify the Lodestone website is accessible
+    \item Try refreshing the page
+\end{itemize}
+
+\subsubsection{Server Issues}
+If the server won't start:
+\begin{lstlisting}[language=bash]
+# Check if port 3000 is in use
+# Use a different port if needed:
+PORT=3001 npm start
+\end{lstlisting}
+
+\section{Support}
+If you encounter issues not covered in this guide:
+\begin{enumerate}
+    \item Check the browser console for errors
+    \item Verify all prerequisites are met
+    \item Ensure all dependencies are installed
+    \item Check the Lodestone website status
+\end{enumerate}
+
+\section{License}
+This project is licensed under the ISC License. See the package.json file for details.
+
+\end{document} 

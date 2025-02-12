@@ -1,38 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FFXIV Character Search</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Redirecting...</title>
+    <script>
+        // Get the repository name from the URL
+        const repoPath = window.location.pathname.split('/')[1];
+        const redirectPath = repoPath ? `/${repoPath}/public/index.html` : '/public/index.html';
+        window.location.href = redirectPath;
+    </script>
 </head>
+
 <body>
-    <div class="app">
-        <header>
-            <h1>FFXIV Character Search</h1>
-        </header>
-
-        <main>
-            <form id="searchForm" class="search-form">
-                <div class="search-group">
-                    <input type="text" id="characterName" placeholder="Character Name" required>
-                    <input type="text" id="world" placeholder="World (optional)">
-                    <input type="text" id="datacenter" placeholder="Data Center (optional)">
-                    <button type="submit">Search</button>
-                </div>
-            </form>
-
-            <div id="loading" class="loading" style="display: none">Searching...</div>
-            <div id="error" class="error" style="display: none"></div>
-
-            <div id="searchResults" class="search-results"></div>
-            <div id="characterDetails" class="character-details"></div>
-        </main>
-
-        <footer>
-            <p>Data from FFXIV Lodestone</p>
-        </footer>
-    </div>
-    <script type="module" src="src/app.js"></script>
+    <noscript>
+        <meta http-equiv="refresh" content="0;url=public/index.html">
+    </noscript>
+    <p>Redirecting to <a href="public/index.html">FFXIV Character Search</a>...</p>
 </body>
+
 </html>

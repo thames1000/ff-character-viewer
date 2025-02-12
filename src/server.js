@@ -11,7 +11,6 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
-app.use(express.static(path.join(__dirname, '..'))); // Allow access to root directory
 
 // Search characters
 app.get('/api/search', async (req, res) => {
@@ -53,7 +52,7 @@ app.get('/api/search', async (req, res) => {
         const $ = cheerio.load(html);
         const characters = [];
 
-        // Parse search results
+        // Updated selectors to match Lodestone's structure
         $('.ldst__window').find('.entry').each((i, element) => {
             const charElement = $(element);
 
@@ -85,7 +84,7 @@ app.get('/api/search', async (req, res) => {
                 level: charElement.find('.entry__chara__level').text().trim()
             };
 
-            console.log('Found character:', characterData);
+            console.log('Found character:', characterData); // Debug log
             characters.push(characterData);
         });
 
@@ -100,7 +99,7 @@ app.get('/api/search', async (req, res) => {
 // Get character details
 app.get('/api/character/:id', async (req, res) => {
     try {
-        // First get the main character profile
+        // First get the main character profile for portrait and basic info
         const profileResponse = await fetch(`https://na.finalfantasyxiv.com/lodestone/character/${req.params.id}/`, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -109,7 +108,7 @@ app.get('/api/character/:id', async (req, res) => {
         const profileHtml = await profileResponse.text();
         const profile$ = cheerio.load(profileHtml);
 
-        // Then get the class/job page
+        // Then get the class/job page for levels
         const jobsResponse = await fetch(`https://na.finalfantasyxiv.com/lodestone/character/${req.params.id}/class_job`, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -118,7 +117,25 @@ app.get('/api/character/:id', async (req, res) => {
         const jobsHtml = await jobsResponse.text();
         const jobs$ = cheerio.load(jobsHtml);
 
-        // Parse character data
+        // Debug the class/job page structure
+        console.log('\n=== Class/Job Page Analysis ===');
+        console.log('Number of job role sections:', jobs$('.character__job__role').length);
+
+        jobs$('.character__job__role').each((i, section) => {
+            const roleTitle = jobs$(section).find('.heading--lead').text().trim();
+            console.log(`\nRole Section ${i + 1}: ${roleTitle}`);
+
+            jobs$(section).find('li').each((j, job) => {
+                const $job = jobs$(job);
+                console.log('\nJob Entry:', {
+                    level: $job.find('.character__job__level').text().trim(),
+                    name: $job.find('.character__job__name').text().trim(),
+                    tooltip: $job.find('.character__job__name').attr('data-tooltip'),
+                    exp: $job.find('.character__job__exp').text().trim()
+                });
+            });
+        });
+
         const character = {
             name: profile$('.frame__chara__name').text().trim(),
             title: profile$('.frame__chara__title').text().trim(),
@@ -128,6 +145,9 @@ app.get('/api/character/:id', async (req, res) => {
             jobs: parseJobs(jobs$),
         };
 
+        console.log('\n=== Final Parsed Character Data ===');
+        console.log(JSON.stringify(character, null, 2));
+
         res.json({ character });
     } catch (error) {
         console.error('Character detail error:', error);
@@ -135,7 +155,6 @@ app.get('/api/character/:id', async (req, res) => {
     }
 });
 
-// Helper function to parse jobs
 function parseJobs($) {
     const jobs = {
         tank: {},
@@ -145,12 +164,15 @@ function parseJobs($) {
         gathering: {}
     };
 
+    // Find all job roles in the character__job__role sections
     $('.character__job__role').each((i, roleSection) => {
         const $roleSection = $(roleSection);
 
+        // Find all jobs in this role section
         $roleSection.find('li').each((j, jobElement) => {
             const $job = $(jobElement);
 
+            // Get job info - just level and icon
             const level = $job.find('.character__job__level').text().trim();
             const jobName = $job.find('.character__job__name').text().trim();
             const jobIcon = $job.find('img').attr('src') || '';
@@ -159,6 +181,7 @@ function parseJobs($) {
                 const jobAbbr = getJobAbbr(jobName);
                 if (jobAbbr) {
                     const category = categorizeJob(jobAbbr);
+                    // Store just the level number and icon URL
                     jobs[category][jobAbbr] = {
                         level: parseInt(level, 10),
                         icon: jobIcon
@@ -171,20 +194,49 @@ function parseJobs($) {
     return jobs;
 }
 
-// Helper function to get job abbreviations
 function getJobAbbr(tooltip) {
+    // Map of job names to abbreviations
     const jobMap = {
-        'Paladin': 'PLD', 'Warrior': 'WAR', 'Dark Knight': 'DRK', 'Gunbreaker': 'GNB',
-        'White Mage': 'WHM', 'Scholar': 'SCH', 'Astrologian': 'AST', 'Sage': 'SGE',
-        'Monk': 'MNK', 'Dragoon': 'DRG', 'Ninja': 'NIN', 'Samurai': 'SAM',
-        'Reaper': 'RPR', 'Bard': 'BRD', 'Machinist': 'MCH', 'Dancer': 'DNC',
-        'Black Mage': 'BLM', 'Summoner': 'SMN', 'Red Mage': 'RDM', 'Blue Mage': 'BLU',
-        'Carpenter': 'CRP', 'Blacksmith': 'BSM', 'Armorer': 'ARM', 'Goldsmith': 'GSM',
-        'Leatherworker': 'LTW', 'Weaver': 'WVR', 'Alchemist': 'ALC', 'Culinarian': 'CUL',
-        'Miner': 'MIN', 'Botanist': 'BTN', 'Fisher': 'FSH',
+        'Paladin': 'PLD',
+        'Warrior': 'WAR',
+        'Dark Knight': 'DRK',
+        'Gunbreaker': 'GNB',
+        'White Mage': 'WHM',
+        'Scholar': 'SCH',
+        'Astrologian': 'AST',
+        'Sage': 'SGE',
+        'Monk': 'MNK',
+        'Dragoon': 'DRG',
+        'Ninja': 'NIN',
+        'Samurai': 'SAM',
+        'Reaper': 'RPR',
+        'Bard': 'BRD',
+        'Machinist': 'MCH',
+        'Dancer': 'DNC',
+        'Black Mage': 'BLM',
+        'Summoner': 'SMN',
+        'Red Mage': 'RDM',
+        'Blue Mage': 'BLU',
+        'Carpenter': 'CRP',
+        'Blacksmith': 'BSM',
+        'Armorer': 'ARM',
+        'Goldsmith': 'GSM',
+        'Leatherworker': 'LTW',
+        'Weaver': 'WVR',
+        'Alchemist': 'ALC',
+        'Culinarian': 'CUL',
+        'Miner': 'MIN',
+        'Botanist': 'BTN',
+        'Fisher': 'FSH',
         // Base classes
-        'Gladiator': 'GLA', 'Marauder': 'MRD', 'Conjurer': 'CNJ', 'Pugilist': 'PGL',
-        'Lancer': 'LNC', 'Rogue': 'ROG', 'Archer': 'ARC', 'Thaumaturge': 'THM',
+        'Gladiator': 'GLA',
+        'Marauder': 'MRD',
+        'Conjurer': 'CNJ',
+        'Pugilist': 'PGL',
+        'Lancer': 'LNC',
+        'Rogue': 'ROG',
+        'Archer': 'ARC',
+        'Thaumaturge': 'THM',
         'Arcanist': 'ACN'
     };
 
@@ -196,13 +248,30 @@ function getJobAbbr(tooltip) {
     return null;
 }
 
-// Helper function to categorize jobs
 function categorizeJob(jobAbbr) {
+    // Tanks
     if (['GLA', 'PLD', 'MRD', 'WAR', 'DRK', 'GNB'].includes(jobAbbr)) return 'tank';
+    // Healers
     if (['CNJ', 'WHM', 'SCH', 'AST', 'SGE'].includes(jobAbbr)) return 'healer';
+    // Crafters
     if (['CRP', 'BSM', 'ARM', 'GSM', 'LTW', 'WVR', 'ALC', 'CUL'].includes(jobAbbr)) return 'crafting';
+    // Gatherers
     if (['MIN', 'BTN', 'FSH'].includes(jobAbbr)) return 'gathering';
+    // DPS
     return 'dps';
+}
+
+function parseGear($) {
+    const gear = {};
+    $('.item-list__list').each((i, element) => {
+        const slot = $(element).find('.item-list__category').text().trim();
+        gear[slot] = {
+            name: $(element).find('.item-list__name').text().trim(),
+            icon: $(element).find('img').attr('src'),
+            ilvl: parseInt($(element).find('.item-list__level').text().match(/\d+/)[0], 10)
+        };
+    });
+    return gear;
 }
 
 app.listen(PORT, () => {

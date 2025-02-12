@@ -1,8 +1,13 @@
 const LODESTONE_URL = 'https://na.finalfantasyxiv.com/lodestone';
-const CORS_PROXY = 'https://corsproxy.io/?';
 
 export async function searchCharacters(name, world = '', datacenter = '') {
     try {
+        // Create a hidden iframe to load the Lodestone page
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+
+        // Load the search URL in the iframe
         const params = new URLSearchParams({
             q: name.trim(),
             worldname: world || '',
@@ -12,31 +17,44 @@ export async function searchCharacters(name, world = '', datacenter = '') {
             page: '1'
         }).toString();
 
-        const response = await fetch(`${CORS_PROXY}${LODESTONE_URL}/character/?${params}`);
-        const text = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(text, 'text/html');
+        return new Promise((resolve, reject) => {
+            iframe.onload = () => {
+                try {
+                    const doc = iframe.contentDocument;
+                    const characters = Array.from(doc.querySelectorAll('.entry')).map(entry => {
+                        const charLink = entry.querySelector('a.entry__link').href;
+                        const charId = charLink.split('/').filter(Boolean)[2];
+                        const serverText = entry.querySelector('.entry__world').textContent;
+                        const [worldName = '', dcInfo = ''] = serverText.includes('[') ?
+                            serverText.split('[') : [serverText, ''];
+                        const dcName = dcInfo.replace(']', '').trim();
 
-        const characters = Array.from(doc.querySelectorAll('.entry')).map(entry => {
-            const charLink = entry.querySelector('a.entry__link').href;
-            const charId = charLink.split('/').filter(Boolean)[2];
-            const serverText = entry.querySelector('.entry__world').textContent;
-            const [worldName = '', dcInfo = ''] = serverText.includes('[') ?
-                serverText.split('[') : [serverText, ''];
-            const dcName = dcInfo.replace(']', '').trim();
+                        return {
+                            id: charId,
+                            name: entry.querySelector('.entry__name').textContent.trim(),
+                            world: worldName.trim(),
+                            datacenter: dcName,
+                            avatar: entry.querySelector('.entry__chara__face img').src,
+                            rank: entry.querySelector('.entry__chara__class').textContent.trim(),
+                            level: entry.querySelector('.entry__chara__level').textContent.trim()
+                        };
+                    });
 
-            return {
-                id: charId,
-                name: entry.querySelector('.entry__name').textContent.trim(),
-                world: worldName.trim(),
-                datacenter: dcName,
-                avatar: entry.querySelector('.entry__chara__face img').src,
-                rank: entry.querySelector('.entry__chara__class').textContent.trim(),
-                level: entry.querySelector('.entry__chara__level').textContent.trim()
+                    document.body.removeChild(iframe);
+                    resolve({ characters });
+                } catch (error) {
+                    document.body.removeChild(iframe);
+                    reject(error);
+                }
             };
-        });
 
-        return { characters };
+            iframe.onerror = () => {
+                document.body.removeChild(iframe);
+                reject(new Error('Failed to load Lodestone page'));
+            };
+
+            iframe.src = `${LODESTONE_URL}/character/?${params}`;
+        });
     } catch (error) {
         console.error('Search error:', error);
         throw error;
@@ -45,26 +63,56 @@ export async function searchCharacters(name, world = '', datacenter = '') {
 
 export async function getCharacterDetails(characterId) {
     try {
-        // Get profile
-        const profileResponse = await fetch(`${CORS_PROXY}${LODESTONE_URL}/character/${characterId}/`);
-        const profileText = await profileResponse.text();
-        const profileDoc = new DOMParser().parseFromString(profileText, 'text/html');
+        // Create iframes for profile and jobs
+        const profileIframe = document.createElement('iframe');
+        const jobsIframe = document.createElement('iframe');
+        profileIframe.style.display = 'none';
+        jobsIframe.style.display = 'none';
+        document.body.appendChild(profileIframe);
+        document.body.appendChild(jobsIframe);
 
-        // Get jobs
-        const jobsResponse = await fetch(`${CORS_PROXY}${LODESTONE_URL}/character/${characterId}/class_job`);
-        const jobsText = await jobsResponse.text();
-        const jobsDoc = new DOMParser().parseFromString(jobsText, 'text/html');
+        // Load both pages simultaneously
+        const [profileData, jobsData] = await Promise.all([
+            new Promise((resolve, reject) => {
+                profileIframe.onload = () => {
+                    try {
+                        const doc = profileIframe.contentDocument;
+                        resolve({
+                            name: doc.querySelector('.frame__chara__name').textContent.trim(),
+                            title: doc.querySelector('.frame__chara__title')?.textContent.trim() || '',
+                            server: doc.querySelector('.frame__chara__world').textContent.trim(),
+                            portrait: doc.querySelector('.character__detail__image img').src,
+                            bio: doc.querySelector('.character__selfintroduction')?.textContent.trim() || ''
+                        });
+                    } catch (error) {
+                        reject(error);
+                    } finally {
+                        document.body.removeChild(profileIframe);
+                    }
+                };
+                profileIframe.src = `${LODESTONE_URL}/character/${characterId}/`;
+            }),
+            new Promise((resolve, reject) => {
+                jobsIframe.onload = () => {
+                    try {
+                        const doc = jobsIframe.contentDocument;
+                        resolve(parseJobs(doc));
+                    } catch (error) {
+                        reject(error);
+                    } finally {
+                        document.body.removeChild(jobsIframe);
+                    }
+                };
+                jobsIframe.src = `${LODESTONE_URL}/character/${characterId}/class_job`;
+            })
+        ]);
 
-        const character = {
-            name: profileDoc.querySelector('.frame__chara__name').textContent.trim(),
-            title: profileDoc.querySelector('.frame__chara__title')?.textContent.trim() || '',
-            server: profileDoc.querySelector('.frame__chara__world').textContent.trim(),
-            portrait: profileDoc.querySelector('.character__detail__image img').src,
-            bio: profileDoc.querySelector('.character__selfintroduction')?.textContent.trim() || '',
-            jobs: parseJobs(jobsDoc)
+        return {
+            character: {
+                ...profileData,
+                jobs: jobsData
+            }
         };
-
-        return { character };
     } catch (error) {
         console.error('Character detail error:', error);
         throw error;

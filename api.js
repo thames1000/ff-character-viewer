@@ -13,7 +13,12 @@ class LodestoneAPI {
             try {
                 const response = await fetch(`${proxy}${encodeURIComponent(url)}`);
                 if (response.ok) {
-                    return await response.text();
+                    const text = await response.text();
+                    // Validate that we got valid HTML content
+                    if (text.includes('<!DOCTYPE html>') || text.includes('<html')) {
+                        return text;
+                    }
+                    console.warn(`Invalid HTML content received from ${proxy}`);
                 }
             } catch (error) {
                 lastError = error;
@@ -22,7 +27,7 @@ class LodestoneAPI {
             }
         }
         
-        throw new Error(`All proxies failed. Last error: ${lastError?.message}`);
+        throw new Error(`Failed to fetch valid content. Last error: ${lastError?.message}`);
     }
 
     static async searchCharacters(name, world = '', datacenter = '') {
@@ -40,20 +45,45 @@ class LodestoneAPI {
             const parser = new DOMParser();
             const doc = parser.parseFromString(text, 'text/html');
 
-            const characters = Array.from(doc.querySelectorAll('.entry')).map(entry => ({
-                id: entry.querySelector('a.entry__link').href.split('/')[4],
-                name: entry.querySelector('.entry__name').textContent.trim(),
-                world: entry.querySelector('.entry__world').textContent.split('[')[0].trim(),
-                datacenter: entry.querySelector('.entry__world').textContent.match(/\[(.*?)\]/)?.[1] || '',
-                avatar: entry.querySelector('.entry__chara__face img').src,
-                rank: entry.querySelector('.entry__chara__class').textContent.trim(),
-                level: entry.querySelector('.entry__chara__level').textContent.trim()
-            }));
+            // Validate that we have search results
+            const entries = doc.querySelectorAll('.entry');
+            if (!entries || entries.length === 0) {
+                return [];
+            }
+
+            const characters = Array.from(entries).map(entry => {
+                try {
+                    const link = entry.querySelector('a.entry__link');
+                    const nameEl = entry.querySelector('.entry__name');
+                    const worldEl = entry.querySelector('.entry__world');
+                    const avatarEl = entry.querySelector('.entry__chara__face img');
+                    const rankEl = entry.querySelector('.entry__chara__class');
+                    const levelEl = entry.querySelector('.entry__chara__level');
+
+                    if (!link || !nameEl || !worldEl || !avatarEl || !rankEl || !levelEl) {
+                        console.warn('Missing required elements for character entry');
+                        return null;
+                    }
+
+                    return {
+                        id: link.href.split('/')[4],
+                        name: nameEl.textContent.trim(),
+                        world: worldEl.textContent.split('[')[0].trim(),
+                        datacenter: worldEl.textContent.match(/\[(.*?)\]/)?.[1] || '',
+                        avatar: avatarEl.src,
+                        rank: rankEl.textContent.trim(),
+                        level: levelEl.textContent.trim()
+                    };
+                } catch (error) {
+                    console.warn('Failed to parse character entry:', error);
+                    return null;
+                }
+            }).filter(char => char !== null);
 
             return characters;
         } catch (error) {
             console.error('Search error:', error);
-            throw error;
+            throw new Error('Failed to search characters. Please try again.');
         }
     }
 
@@ -70,7 +100,7 @@ class LodestoneAPI {
             };
         } catch (error) {
             console.error('Character detail error:', error);
-            throw error;
+            throw new Error('Failed to retrieve character details. Please try again.');
         }
     }
 
@@ -78,13 +108,29 @@ class LodestoneAPI {
         const text = await this.#fetchWithFallback(`${LODESTONE_URL}/character/${characterId}/`);
         const doc = new DOMParser().parseFromString(text, 'text/html');
 
-        return {
-            name: doc.querySelector('.frame__chara__name').textContent.trim(),
-            title: doc.querySelector('.frame__chara__title')?.textContent.trim() || '',
-            server: doc.querySelector('.frame__chara__world').textContent.trim(),
-            portrait: doc.querySelector('.character__detail__image img').src,
-            bio: doc.querySelector('.character__selfintroduction')?.textContent.trim() || ''
-        };
+        try {
+            const nameEl = doc.querySelector('.frame__chara__name');
+            const titleEl = doc.querySelector('.frame__chara__title');
+            const serverEl = doc.querySelector('.frame__chara__world');
+            const portraitEl = doc.querySelector('.character__detail__image img');
+            const bioEl = doc.querySelector('.character__selfintroduction');
+
+            if (!nameEl || !serverEl || !portraitEl) {
+                console.warn('Missing required elements for character profile');
+                throw new Error('Failed to retrieve character profile. Please try again.');
+            }
+
+            return {
+                name: nameEl.textContent.trim(),
+                title: titleEl?.textContent.trim() || '',
+                server: serverEl.textContent.trim(),
+                portrait: portraitEl.src,
+                bio: bioEl?.textContent.trim() || ''
+            };
+        } catch (error) {
+            console.error('Failed to parse character profile:', error);
+            throw new Error('Failed to retrieve character profile. Please try again.');
+        }
     }
 
     static async #getJobs(characterId) {
@@ -99,24 +145,38 @@ class LodestoneAPI {
             gathering: {}
         };
 
-        doc.querySelectorAll('.character__job__role').forEach(roleSection => {
-            roleSection.querySelectorAll('li').forEach(jobElement => {
-                const level = jobElement.querySelector('.character__job__level').textContent.trim();
-                const jobName = jobElement.querySelector('.character__job__name').textContent.trim();
-                const jobIcon = jobElement.querySelector('img').src;
+        try {
+            doc.querySelectorAll('.character__job__role').forEach(roleSection => {
+                roleSection.querySelectorAll('li').forEach(jobElement => {
+                    const levelEl = jobElement.querySelector('.character__job__level');
+                    const jobNameEl = jobElement.querySelector('.character__job__name');
+                    const jobIconEl = jobElement.querySelector('img');
 
-                if (jobName && level) {
-                    const jobAbbr = this.#getJobAbbr(jobName);
-                    if (jobAbbr) {
-                        const category = this.#categorizeJob(jobAbbr);
-                        jobs[category][jobAbbr] = {
-                            level: parseInt(level, 10),
-                            icon: jobIcon
-                        };
+                    if (!levelEl || !jobNameEl || !jobIconEl) {
+                        console.warn('Missing required elements for job entry');
+                        return;
                     }
-                }
+
+                    const level = levelEl.textContent.trim();
+                    const jobName = jobNameEl.textContent.trim();
+                    const jobIcon = jobIconEl.src;
+
+                    if (jobName && level) {
+                        const jobAbbr = this.#getJobAbbr(jobName);
+                        if (jobAbbr) {
+                            const category = this.#categorizeJob(jobAbbr);
+                            jobs[category][jobAbbr] = {
+                                level: parseInt(level, 10),
+                                icon: jobIcon
+                            };
+                        }
+                    }
+                });
             });
-        });
+        } catch (error) {
+            console.error('Failed to parse character jobs:', error);
+            throw new Error('Failed to retrieve character jobs. Please try again.');
+        }
 
         return jobs;
     }

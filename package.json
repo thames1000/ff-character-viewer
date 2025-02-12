@@ -1,6 +1,7 @@
 {
     "name": "ffxiv-character-search",
     "version": "1.0.0",
+    "homepage": "https://thames1000.github.io/ff-character-viewer",
     "description": "FFXIV Character Search using Lodestone",
     "main": "src/server.js",
     "scripts": {

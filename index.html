@@ -5,12 +5,18 @@
     <meta charset="UTF-8">
     <title>Redirecting...</title>
     <script>
-        window.location.href = '/public/index.html';
+        // Get the repository name from the URL
+        const repoPath = window.location.pathname.split('/')[1];
+        const redirectPath = repoPath ? `/${repoPath}/public/index.html` : '/public/index.html';
+        window.location.href = redirectPath;
     </script>
 </head>
 
 <body>
-    <p>Redirecting to <a href="/public/index.html">FFXIV Character Search</a>...</p>
+    <noscript>
+        <meta http-equiv="refresh" content="0;url=public/index.html">
+    </noscript>
+    <p>Redirecting to <a href="public/index.html">FFXIV Character Search</a>...</p>
 </body>
 
 </html>

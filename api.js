@@ -1,7 +1,30 @@
 const LODESTONE_URL = 'https://na.finalfantasyxiv.com/lodestone';
-const CORS_PROXY = 'https://corsproxy.io/?';
+const CORS_PROXIES = [
+    'https://api.allorigins.win/raw?url=',
+    'https://corsproxy.io/?',
+    'https://cors-anywhere.herokuapp.com/'
+];
 
 class LodestoneAPI {
+    static async #fetchWithFallback(url) {
+        let lastError;
+        
+        for (const proxy of CORS_PROXIES) {
+            try {
+                const response = await fetch(`${proxy}${encodeURIComponent(url)}`);
+                if (response.ok) {
+                    return await response.text();
+                }
+            } catch (error) {
+                lastError = error;
+                console.warn(`Failed to fetch with proxy ${proxy}:`, error);
+                continue;
+            }
+        }
+        
+        throw new Error(`All proxies failed. Last error: ${lastError?.message}`);
+    }
+
     static async searchCharacters(name, world = '', datacenter = '') {
         const params = new URLSearchParams({
             q: name.trim(),
@@ -13,8 +36,7 @@ class LodestoneAPI {
         }).toString();
 
         try {
-            const response = await fetch(`${CORS_PROXY}${encodeURIComponent(LODESTONE_URL)}/character/?${params}`);
-            const text = await response.text();
+            const text = await this.#fetchWithFallback(`${LODESTONE_URL}/character/?${params}`);
             const parser = new DOMParser();
             const doc = parser.parseFromString(text, 'text/html');
 
@@ -53,8 +75,7 @@ class LodestoneAPI {
     }
 
     static async #getProfile(characterId) {
-        const response = await fetch(`${CORS_PROXY}${encodeURIComponent(LODESTONE_URL)}/character/${characterId}/`);
-        const text = await response.text();
+        const text = await this.#fetchWithFallback(`${LODESTONE_URL}/character/${characterId}/`);
         const doc = new DOMParser().parseFromString(text, 'text/html');
 
         return {
@@ -67,8 +88,7 @@ class LodestoneAPI {
     }
 
     static async #getJobs(characterId) {
-        const response = await fetch(`${CORS_PROXY}${encodeURIComponent(LODESTONE_URL)}/character/${characterId}/class_job`);
-        const text = await response.text();
+        const text = await this.#fetchWithFallback(`${LODESTONE_URL}/character/${characterId}/class_job`);
         const doc = new DOMParser().parseFromString(text, 'text/html');
 
         const jobs = {

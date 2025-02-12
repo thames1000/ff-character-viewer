@@ -1,4 +1,4 @@
-const LODESTONE_URL = 'https://xivapi.com';
+const LODESTONE_URL = 'https://na.finalfantasyxiv.com/lodestone';
 
 export async function searchCharacters(name, world = '', datacenter = '') {
     try {
@@ -11,7 +11,7 @@ export async function searchCharacters(name, world = '', datacenter = '') {
             page: '1'
         }).toString();
 
-        const response = await fetch(`/lodestone/character/?${params}`);
+        const response = await fetch(`${LODESTONE_URL}/character/?${params}`);
         const text = await response.text();
         const parser = new DOMParser();
         const doc = parser.parseFromString(text, 'text/html');

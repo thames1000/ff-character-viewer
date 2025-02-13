@@ -1,51 +1,31 @@
-<<<<<<< Updated upstream
 {
-    "name": "ffxiv-character-search",
+    "name": "ff-character-viewer",
     "version": "1.0.0",
-    "description": "FFXIV Character Search using Lodestone",
-    "main": "src/server.js",
+    "description": "FFXIV Character Viewer",
+    "main": "index.js",
     "scripts": {
-        "start": "node src/server.js",
-        "dev": "nodemon src/server.js",
+        "start": "concurrently \"npm run server\" \"npm run dev\"",
+        "dev": "webpack serve",
+        "server": "node server.js",
         "build": "webpack --mode production",
-        "watch": "webpack --watch --mode development"
+        "predeploy": "npm run build",
+        "deploy": "gh-pages -d public"
     },
     "dependencies": {
         "cheerio": "^1.0.0-rc.12",
+        "node-fetch": "^2.7.0",
         "cors": "^2.8.5",
-        "express": "^4.18.2",
-        "node-fetch": "^2.6.9"
+        "express": "^4.18.2"
     },
     "devDependencies": {
+        "concurrently": "^8.2.2",
         "css-loader": "^6.8.1",
+        "gh-pages": "^6.1.1",
         "style-loader": "^3.3.3",
-        "webpack": "^5.88.0",
+        "webpack": "^5.89.0",
         "webpack-cli": "^5.1.4",
-        "nodemon": "^3.0.1"
-    }
+        "webpack-dev-server": "^4.15.1",
+        "html-webpack-plugin": "^5.5.0"
+    },
+    "homepage": "https://thames1000.github.io/ff-character-viewer"
 }
-=======
-{
-  "name": "ff-character-viewer",
-  "version": "1.0.0",
-  "description": "FFXIV Character Search using Lodestone",
-  "scripts": {
-    "start": "webpack serve --mode development",
-    "build": "webpack --mode production",
-    "predeploy": "npm run build",
-    "deploy": "node -e \"require('child_process').execSync(process.platform === 'win32' ? '.\\\\deploy-windows.bat' : './deploy-unix.sh', {stdio: 'inherit'})\""
-  },
-  "devDependencies": {
-    "webpack": "^5.88.0",
-    "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^4.15.1",
-    "css-loader": "^6.8.1",
-    "style-loader": "^3.3.3",
-    "gh-pages": "^6.1.1"
-  },
-  "dependencies": {
-    "cheerio": "^1.0.0-rc.12"
-  },
-  "homepage": "https://thames1000.github.io/ff-character-viewer"
-}
->>>>>>> Stashed changes
